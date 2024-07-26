@@ -1,4 +1,4 @@
 streamlit
 gspread
-oath2client
+oauth2client
 pandas
