@@ -13,19 +13,42 @@ closers = ['Kyle Boden', 'Spencer Jackson', 'Michael Oliveira']
 states = ['CA', 'CT', 'FL', 'IA', 'IL', 'GA', 'KY', 'MA', 'ME', 'MO', 'NH', 'NJ', 'OH', 'RI', 'TX', 'UT', 'VT']
 dispositions = ['Closed', 'No Sit', 'Not Interested', 'Reschedule', 'Pitched, need to Follow Up', 'DNQ', 'We didn\'t call']
 
-# Define scope and credentials
-def initialize_gspread():
-    scope = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
-    client = gspread.authorize(creds)
-    return client.open('BAU Database').sheet1
+if "gcp_service_account" not in st.secrets:
+    raise KeyError("Missing 'gcp_service_account' in secrets")
 
-# Load and preprocess data
-def load_data(sheet):
-    df = pd.DataFrame(sheet.get_all_records())
-    df['Set Date'] = pd.to_datetime(df['Set Date'], errors='coerce')
-    df['Close Date'] = pd.to_datetime(df['Close Date'], errors='coerce')
-    return df
+# Define the scope and credentials for Google Sheets API
+scope = [
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/drive'
+]
+
+# Extract credentials from secrets
+creds_dict = st.secrets["gcp_service_account"]
+
+# Ensure all required fields are available
+required_keys = [
+    "type",
+    "project_id",
+    "private_key_id",
+    "private_key",
+    "client_email",
+    "client_id",
+    "auth_uri",
+    "token_uri",
+    "auth_provider_x509_cert_url",
+    "client_x509_cert_url",
+    "universe_domain"
+]
+
+for key in required_keys:
+    if key not in creds_dict:
+        raise KeyError(f"Missing '{key}' in 'gcp_service_account' secrets")
+
+# Authenticate and create the service client
+creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=scope)
+client = gspread.authorize(creds)
+
 
 def filter_data(df, date_column, start_date, end_date):
     df_filtered = df[df[date_column].between(start_date, end_date)]
@@ -69,8 +92,8 @@ def create_table(df, highlight_func, width="100%"):
     return f'<div style="width: {width};">{html}</div>'
 
 # Initialize Google Sheets and load data
-sheet = initialize_gspread()
-df = load_data(sheet)
+sheet = client.open('BAU Database').sheet1
+df = pd.DataFrame(sheet.get_all_records())
 
 # Define date ranges
 today = datetime.now()
