@@ -1,6 +1,6 @@
 import streamlit as st
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 import pandas as pd
 from datetime import datetime, timedelta
 
@@ -37,8 +37,7 @@ required_keys = [
     "auth_uri",
     "token_uri",
     "auth_provider_x509_cert_url",
-    "client_x509_cert_url",
-    "universe_domain"
+    "client_x509_cert_url"
 ]
 
 for key in required_keys:
@@ -46,9 +45,8 @@ for key in required_keys:
         raise KeyError(f"Missing '{key}' in 'gcp_service_account' secrets")
 
 # Authenticate and create the service client
-creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=scope)
+creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
-
 
 def filter_data(df, date_column, start_date, end_date):
     df_filtered = df[df[date_column].between(start_date, end_date)]
