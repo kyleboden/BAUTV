@@ -49,6 +49,8 @@ creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
 client = gspread.authorize(creds)
 
 def filter_data(df, date_column, start_date, end_date):
+    # Ensure the date_column is in datetime format
+    df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
     df_filtered = df[df[date_column].between(start_date, end_date)]
     df_filtered['Day of Week'] = df_filtered[date_column].dt.day_name()
     return df_filtered
@@ -100,12 +102,18 @@ end_of_week = start_of_week + timedelta(days=4)
 start_of_month = today.replace(day=1)
 start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
+# Debug: Print DataFrame and column types
+print(df.head())
+print(df.columns)
+print(df.dtypes)
+
 # Filter data
 filtered_sets_df = filter_data(df, 'Set Date', start_of_week, end_of_week)
 filtered_closes_df = filter_data(df[df['Closer Disposition'] == 'Closed'], 'Close Date', start_of_week, end_of_week)
 filtered_appts_df = filter_data(df[df['Close Date'].notna()], 'Close Date', start_of_week, end_of_week)
 filtered_dnqs_df = filter_data(df[df['Closer Disposition'] == 'DNQ'], 'Close Date', start_of_week, end_of_week)
 filtered_sits_df = filter_data(df[df['Closer Disposition'] != 'No Sit'], 'Close Date', start_of_week, end_of_week)
+
 
 # Get counts for each type
 metrics = ['Sets', 'Appointments', 'Closes', 'DNQs', 'Sits']
