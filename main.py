@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 # Set page layout
-st.set_page_config(layout="wide", page_icon = :flag-tv:)
+st.set_page_config(layout="wide", page_title = "BAU TV", page_icon = ":flag-tv:")
 
 # Define your lists
 setters = ['Hunter Bolen', 'Jake Bolen', 'Danny Timmreck', 'Joshua Killpack', 'Closer Self-Gen']
